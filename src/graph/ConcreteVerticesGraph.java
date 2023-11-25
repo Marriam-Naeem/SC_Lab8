@@ -289,4 +289,8 @@ class Vertex {
     public int hashCode() {
         return Objects.hash(label);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 8fa5b2da0939ba296f31ed25e2cda54623366e31
