@@ -1,223 +1,580 @@
+/* Copyright (c) 2015-2016 MIT 6.005 course staff, all rights reserved.
+ * Redistribution of original or derived work requires permission of course staff.
+ */
+package graph;
+
 import static org.junit.Assert.*;
+
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+
 import org.junit.Test;
+
 /**
-* Tests for instance methods of Graph.
-*
-* <p>PS2 instructions: you MUST NOT add constructors, fields, or non-@Test
-* methods to this class, or change the spec of {@link #emptyInstance()}.
-* Your tests MUST only obtain Graph instances by calling emptyInstance().
-* Your tests MUST NOT refer to specific concrete implementations.
-* 
-* @laiba_abdullah
-*/
+ * Tests for instance methods of Graph.
+ * 
+ * <p>PS2 instructions: you MUST NOT add constructors, fields, or non-@Test
+ * methods to this class, or change the spec of {@link #emptyInstance()}.
+ * Your tests MUST only obtain Graph instances by calling emptyInstance().
+ * Your tests MUST NOT refer to specific concrete implementations.
+ */
 public abstract class GraphInstanceTest {
-   /**
-    * Overridden by implementation-specific test classes.
-    *
-    * @return a new empty graph of the particular implementation being tested
-    */
-   public abstract Graph<String> emptyInstance();
-   @Test(expected = AssertionError.class)
-   public void testAssertionsEnabled() {
-       assert false; // make sure assertions are enabled with VM argument: -ea
-   }
-   @Test
-   public void testInitialVerticesEmpty() {
-       assertEquals("expected new graph to have no vertices", Collections.emptySet(), emptyInstance().vertices());
-   }
-   // Testing strategy for vertices():
-   // - Add vertices to an empty graph and check if vertices() returns the correct set.
-   // - Add vertices to a non-empty graph and check if vertices() returns the correct set.
-   @Test
-   public void testVertices() {
-       Graph<String> graph = emptyInstance();
-       Set<String> expectedVertices = new HashSet<>();
-       // Add vertices to an empty graph
-       graph.add("A");
-       expectedVertices.add("A");
-       assertEquals(expectedVertices, graph.vertices());
-       // Add vertices to a non-empty graph
-       graph.add("B");
-       expectedVertices.add("B");
-       assertEquals(expectedVertices, graph.vertices());
-   }
-   // Testing strategy for sources(String target):
-   // - Add edges between vertices and check if sources() returns the correct set of sources.
-   // - Add self-loop edges and check if sources() includes the vertex itself.
-   @Test
-   public void testSources() {
-       Graph<String> graph = emptyInstance();
-       graph.add("A");
-       graph.add("B");
-       graph.add("C");
-       // Add edges between vertices
-       graph.set("A", "B", 2);
-       graph.set("C", "B", 3);
-       // Test sources for "B"
-       Set<String> expectedSourcesB = new HashSet<>();
-       expectedSourcesB.add("A");
-       expectedSourcesB.add("C");
-       assertEquals(expectedSourcesB, graph.sources("B"));
-       // Test sources for "A" (no incoming edges)
-       assertEquals(Collections.emptySet(), graph.sources("A"));
-       // Test sources for non-existing vertex
-       assertEquals(Collections.emptySet(), graph.sources("D"));
-       // Add a self-loop edge
-       graph.set("A", "A", 1);
-       // Test sources for "A" (including the vertex itself)
-       expectedSourcesB.add("A");
-       assertEquals(expectedSourcesB, graph.sources("A"));
-   }
-   // Testing strategy for set(source, target, weight):
-   // - Add edges between vertices and check if set() correctly adds or updates the edge weight.
-   // - Add self-loop edges and check if set() correctly adds or updates the self-loop edge weight.
-   @Test
-   public void testSet() {
-       Graph<String> graph = emptyInstance();
-       graph.add("A");
-       graph.add("B");
-       graph.add("C");
-       // Add edges between vertices
-       graph.set("A", "B", 2);
-       graph.set("C", "B", 3);
-       // Test edge weights
-       assertEquals(2, graph.set("A", "B", 5)); // Update weight
-       assertEquals(3, graph.set("C", "B", 7)); // Update weight
-       assertEquals(0, graph.set("A", "C", 1)); // Add new edge
-       // Test self-loop edge
-       assertEquals(0, graph.set("A", "A", 10)); // Add self-loop edge
-       assertEquals(10, graph.set("A", "A", 15)); // Update self-loop edge
-   }
-   // Testing strategy for remove(String vertex):
-   // - Remove vertices with and without edges and check if the removal is successful.
-   // - Remove non-existing vertices and check if it has no effect on the graph.
-   @Test
-   public void testRemoveVertex() {
-       Graph<String> graph = emptyInstance();
-       graph.add("A");
-       graph.add("B");
-       graph.add("C");
-       // Add edges between vertices
-       graph.set("A", "B", 2);
-       graph.set("C", "B", 3);
-       // Remove vertices
-       assertTrue(graph.remove("A"));
-       assertEquals(1, graph.vertices().size());
-       assertFalse(graph.remove("D")); // Non-existing vertex
-       // Add a self-loop edge
-       graph.set("B", "B", 5);
-       // Remove vertex with self-loop edge
-       assertTrue(graph.remove("B"));
-       assertEquals(1, graph.vertices().size());
-   }
-   // Testing strategy for targets(String source):
-   // - Add edges between vertices and check if targets() returns the correct set of targets.
-   // - Add self-loop edges and check if targets() includes the vertex itself.
-   @Test
-   public void testTargets() {
-       Graph<String> graph = emptyInstance();
-       graph.add("A");
-       graph.add("B");
-       graph.add("C");
-       // Add edges between vertices
-       graph.set("A", "B", 2);
-       graph.set("C", "B", 3);
-       // Test targets for "A"
-       Set<String> expectedTargetsA = new HashSet<>();
-       expectedTargetsA.add("B");
-       assertEquals(expectedTargetsA, graph.targets("A"));
-       // Test targets for "B"
-       assertEquals(Collections.emptySet(), graph.targets("B")); // No outgoing edges
-       // Test targets for non-existing vertex
-       assertEquals(Collections.emptySet(), graph.targets("D"));
-       // Add a self-loop edge
-       graph.set("A", "A", 1);
-       // Test targets for "A" (including the vertex itself)
-       expectedTargetsA.add("A");
-       assertEquals(expectedTargetsA, graph.targets("A"));
-   }
-   // Testing strategy for remove(String source, String target):
-   // - Remove edges between vertices and check if remove() correctly removes the edge.
-   // - Remove non-existing edges and check if it has no effect on the graph.
-   // - Remove self-loop edges.
-   @Test
-   public void testRemoveEdge() {
-       Graph<String> graph = emptyInstance();
-       graph.add("A");
-       graph.add("B");
-       graph.add("C");
-       // Add edges between vertices
-       graph.set("A", "B", 2);
-       graph.set("C", "B", 3);
-       // Test remove edge
-       assertTrue(graph.remove("A", "B"));
-       assertFalse(graph.remove("D", "C")); // Non-existing edge
-       // Add a self-loop edge
-       graph.set("A", "A", 1);
-       // Test remove self-loop edge
-       assertTrue(graph.remove("A", "A"));
-       assertFalse(graph.remove("B", "B")); // Non-existing self-loop edge
-   }
-   // Testing strategy for vertices():
-   // - Add vertices to an empty graph and check if vertices() returns the correct set.
-   // - Add vertices to a non-empty graph and check if vertices() returns the correct set.
-   @Test
-   public void testVerticesAfterRemove() {
-       Graph<String> graph = emptyInstance();
-       graph.add("A");
-       graph.add("B");
-       graph.add("C");
-       // Add edges between vertices
-       graph.set("A", "B", 2);
-       graph.set("C", "B", 3);
-       // Remove vertices
-       graph.remove("A");
-       graph.remove("D"); // Non-existing vertex
-       // Test vertices after removal
-       Set<String> expectedVertices = new HashSet<>();
-       expectedVertices.add("B");
-       expectedVertices.add("C");
-       assertEquals(expectedVertices, graph.vertices());
-   }
-   // Testing strategy for vertices():
-   // - Add vertices to an empty graph and check if vertices() returns the correct set.
-   // - Add vertices to a non-empty graph and check if vertices() returns the correct set.
-   @Test
-   public void testVerticesAfterRemoveEdge() {
-       Graph<String> graph = emptyInstance();
-       graph.add("A");
-       graph.add("B");
-       graph.add("C");
-       // Add edges between vertices
-       graph.set("A", "B", 2);
-       graph.set("C", "B", 3);
-       // Remove edges
-       graph.remove("A", "B");
-       graph.remove("D", "C"); // Non-existing edge
-       // Test vertices after removal of edges
-       Set<String> expectedVertices = new HashSet<>();
-       expectedVertices.add("A");
-       expectedVertices.add("B");
-       expectedVertices.add("C");
-       assertEquals(expectedVertices, graph.vertices());
-   }
-   // Additional test for toString()
-   // Testing strategy:
-   // - Create a graph with vertices and edges.
-   // - Check if the toString() representation is as expected.
-   @Test
-   public void testToString() {
-       Graph<String> graph = emptyInstance();
-       graph.add("A");
-       graph.add("B");
-       graph.add("C");
-       graph.set("A", "B", 2);
-       graph.set("C", "B", 3);
-       graph.set("A", "A", 1);
-       String expectedToString = "Graph with vertices: [A, B, C], edges: [(A, B, 2), (C, B, 3), (A, A, 1)]";
-       assertEquals(expectedToString, graph.toString());
-   }
+    // NB: we are using an abstract class to allow the use of
+    // different test classes for different implementations.
+    // Our tests, all tests should be implementation-independent
+    // for this very reason
+    //
+    // Testing strategy
+    //   TODO
+    //   Partition for graph.add(label)
+    //      graph: empty, contains multiple vertices
+    //      label: exists in graph, doesn't exist in graph
+    //      output: if add() returns true, graph is modified
+    //              ie number of vertices increases by 1
+    //              else graph unmodified
+    //      observe with vertices()
+    //
+    //   Partition for graph.remove(label)
+    //      graph: empty, contains multiple vertices
+    //      label: exists in graph, doesn't exist in graph,
+    //             exists in edges, doesnt exist in an edge
+    //      output: if remove() returns true, graph is modified
+    //              ie number of vertices decreases by 1
+    //              else graph unmodified
+    //      observe with vertices(), sources(), targets()
+    //   
+    //   Partition for graph.set(source,target,weight) -> previousWeight
+    //      graph: empty, contains multiple vertices    
+    //      source: exists in graph, doesn't exist in graph
+    //      target: exists in graph, doesn't exist in graph
+    //      No edge exists from source to target,
+    //      An edge exists from source to target,
+    //      weight: 0, > 0
+    //      observe with sources(), targets(), vertices()
+    //    
+    //   Partition for graph.vertices() -> allVertices
+    //      graph: empty, contains multiple vertices
+    //   
+    //   Partition for graph.sources(target) -> targetSources
+    //      graph: empty, contains multiple vertices
+    //      target: doesn't exist in graph, exists in graph,
+    //              has no sources, has multiple sources
+    //      targetSources contains all source vertices to target
+    //      
+    //   Partition for graph.targets(source) -> sourceTargets
+    //      graph: empty, contains multiple vertices
+    //      source: doesn't exist in graph, exists in graph,
+    //             has no targets, has multiple targets
+    //      sourceTargets contains all target vertices from source
+    //
+    
+    /**
+     * Overridden by implementation-specific test classes.
+     * 
+     * @return a new empty graph of the particular implementation being tested
+     */
+    public abstract Graph<String> emptyInstance();
+    
+    @Test(expected=AssertionError.class)
+    public void testAssertionsEnabled() {
+        assert false; // make sure assertions are enabled with VM argument: -ea
+    }
+    
+    // TODO other tests for instance methods of Graph
+    @Test
+    //covers empty graph
+    //       label doesn't exist in graph
+    public void testAddEmptyGraph(){
+        Graph<String> graph = emptyInstance();
+        
+        final int InitialNumOfVertices = graph.vertices().size();
+        final String vertex = "vertex";
+        final boolean vertexAdded = graph.add(vertex);
+        final int CurrentNumOfVertices = graph.vertices().size();
+        
+        assertTrue("Expected vertex to be added", vertexAdded);
+        assertEquals("Expected vertices to increase by one",InitialNumOfVertices + 1,CurrentNumOfVertices);
+    }
+    
+    @Test
+    //covers graph contains multiple vertices
+    //       label exists in graph
+    public void testAddExistsInGraph(){
+        Graph<String> graph = emptyInstance();
+        
+        final String vertex1 = "vertex1";
+        final String vertex2 = "vertex2";
+        
+        final boolean vertex1Added = graph.add(vertex1);
+        final boolean vertex2Added = graph.add(vertex2);
+        
+        final int InitialNumOfVertices = graph.vertices().size();
+        
+        final boolean vertex1AddedAgain = graph.add(vertex1);
+        
+        final int CurrentNumOfVertices = graph.vertices().size();
+        
+        assertTrue("Expected vertex1 to be added", vertex1Added);
+        assertTrue("Expected vertex2 to be added", vertex2Added);
+        assertFalse("Expected vertex1 not to be added", vertex1AddedAgain);
+        assertEquals("Expected same number of vertices",InitialNumOfVertices,CurrentNumOfVertices);
+    }
+    
+    //Tests for graph.remove(vertex)
+    @Test
+    //covers empty graph
+    //       label doesn't exist in graph
+    public void testRemoveEmptyGraph(){
+        Graph<String> graph = emptyInstance();
+        
+        final int InitialNumVertices = graph.vertices().size();
+        final String vertex = "vertex";
+        final boolean vertexRemoved = graph.remove(vertex);
+        final int CurrentNumVertices = graph.vertices().size();
+        
+        assertFalse("Expected no effect on graph after remove", vertexRemoved);
+        assertEquals("Expected same number of vertices", InitialNumVertices, CurrentNumVertices);
+    } 
+    
+    @Test
+    //covers graph contains multiple vertices
+    //       label doesn't exist in graph
+    //       label doesn't exist in an edge
+    public void testRemoveNotExistInGraph(){
+        Graph<String> graph = emptyInstance();
+        
+        final String vertex1 = "vertex1";
+        final String vertex2 = "vertex2";
+        final String vertex3 = "vertex3";
+        
+        graph.add(vertex1);
+        graph.add(vertex2);
+        
+        final int InitialNumOfVertices = graph.vertices().size();
+        
+        final boolean vertex3Removed = graph.remove(vertex3);
+        
+        final int CurrentNumOfVertices = graph.vertices().size();
+        
+        assertFalse("Expected no effect on graph after remove", vertex3Removed);
+        assertEquals("Expected same number of vertices", InitialNumOfVertices, CurrentNumOfVertices);
+    }
+    
+    @Test
+    //covers graph contains multiple vertices
+    //       label exists in graph
+    //       label doesn't exist in an edge
+    public void testRemoveExistsInGraph(){
+        Graph<String> graph = emptyInstance();
+        Set<String> vertices = graph.vertices();
+        
+        final String vertex1 = "vertex1";
+        final String vertex2 = "vertex2";
+        
+        graph.add(vertex1);
+        graph.add(vertex2);
+        
+        final int InitialNumOfVertices = graph.vertices().size();
+        
+        final boolean vertex1Removed = graph.remove(vertex1);
+        
+        final int CurrentNumOfVertices = graph.vertices().size();
+        
+        assertTrue("Expected vertex removed", vertex1Removed);
+        assertEquals("Expected number of vertices reduced by 1", InitialNumOfVertices - 1, CurrentNumOfVertices);
+        //assumes case not changed
+        assertFalse("Expected correct vertex removed", vertices.contains(vertex1));
+    }
+    @Test
+    //covers graph contains multiple vertices
+    //       label exists in graph
+    //       label exists in edges
+    public void testRemoveExistInGraphAndEdge(){
+        Graph<String> graph = emptyInstance();
+        final String source1 = "vertex1";
+        final String source2 = "vertex2";
+        final String source3 = "vertex3";
+        final String target1 = "vertex4";
+        final int weight = 1;
+        
+        //create 3 edges
+        graph.set(source1, target1, weight);
+        graph.set(source2, target1, weight);
+        graph.set(source3, source1, weight);
+        
+        int initialNumVertices = graph.vertices().size();
+        final boolean vertexRemoved = graph.remove(source1); 
+        int currentNumVertices = graph.vertices().size();
+        
+        int expectedNumSources = 1;
+        int expectedNumTargets = 1;
+        int currentNumSources = graph.sources(target1).size() +
+                                graph.sources(source1).size();
+        int currentNumTargets = graph.targets(source1).size() +
+                                graph.targets(source2).size() +
+                                graph.targets(source3).size();
+        
+        assertTrue("Expected vertex removed from graph", vertexRemoved);
+        assertEquals("Expected number of vertices to reduce by 1", initialNumVertices - 1, currentNumVertices);
+        assertEquals("Expected vertex removed from sources", expectedNumSources, currentNumSources);
+        assertEquals("Expected vertex removed from targets", expectedNumTargets, currentNumTargets);
+        //assumes case ot changed
+        assertFalse("Expected correct vertex removed", graph.vertices().contains(source1));
+    }
+    //Tests for graph.set()
+    @Test
+    //covers empty graph
+    //       target doesn't exist in graph,
+    //       source doesn't exist in graph,
+    //       No edge exists from source to target
+    //       weight > 0
+    //expects set() to add a new edge to graph
+    public void testSetEmptyGraph(){
+        Graph<String> graph = emptyInstance();
+        final int InitialNumVertices = graph.vertices().size();
+        
+        final String source = "vertex1";
+        final String target = "vertex2";
+        final int weight = 1;
+        
+        final int previousWeight = graph.set(source, target, weight);
+        
+        final int CurrentNumVertices = graph.vertices().size();
+        Map<String, Integer> targets = graph.targets(source);
+        Map<String, Integer> sources = graph.sources(target);
+        
+        assertEquals("Expected no previous weight", 0, previousWeight);
+        assertNotEquals("Expected graph to be modified", InitialNumVertices, CurrentNumVertices);
+        assertEquals("Expected number of vertices increase by 2", InitialNumVertices + 2, CurrentNumVertices);
+        assertTrue("Expected source to have target", targets.containsKey(target));
+        assertTrue("Expected target to have source", sources.containsKey(source));
+        assertEquals("Expected source to have correct weight", (Integer)weight, sources.get(source));
+        assertEquals("Expected target to have correct weight", (Integer)weight, targets.get(target));
+    }
+    
+    @Test
+    //covers graph contains multiple vertices,
+    //       source doesn't exist in graph,
+    //       target exists in graph,
+    //       No edge from source to target,
+    //       weight > 0
+    public void testSetSourceNotExist(){
+        Graph<String> graph = emptyInstance();
+        
+        final String source = "vertex1";
+        final String target = "vertex2";
+        final int weight = 1;
+        
+        graph.add(target);
+        final int InitialNumVertices = graph.vertices().size();
+        final int previousWeight = graph.set(source, target, weight);
+        final int CurrentNumVertices = graph.vertices().size();
+        Map<String, Integer> targets = graph.targets(source);
+        Map<String, Integer> sources = graph.sources(target);
+        
+        assertEquals("Expected no previous weight", 0, previousWeight);
+        assertNotEquals("Expected graph to be modified", InitialNumVertices, CurrentNumVertices);
+        assertEquals("Expected number of vertices to increase by 1", InitialNumVertices + 1, CurrentNumVertices);
+        assertTrue("Expected source to have target", targets.containsKey(target));
+        assertTrue("Expected target to have source", sources.containsKey(source));
+        assertEquals("Expected source to have correct weight", (Integer)weight, sources.get(source));
+        assertEquals("Expected target to have correct weight", (Integer)weight, targets.get(target));
+    }
+    
+    @Test
+    //covers graph contains multiple vertices,
+    //       target doesn't exist in graph,
+    //       source exists in graph,
+    //       No edge from source to target,
+    //       weight > 0
+    public void testSetTargetNotExist(){
+        Graph<String> graph = emptyInstance();
+        
+        final String source = "vertex1";
+        final String target = "vertex2";
+        final int weight = 1;
+        
+        graph.add(source);
+        final int InitialNumVertices = graph.vertices().size();
+        final int previousWeight = graph.set(source, target, weight);
+        final int CurrentNumVertices = graph.vertices().size();
+        Map<String, Integer> targets = graph.targets(source);
+        Map<String, Integer> sources = graph.sources(target);
+        
+        assertEquals("Expected no previous weight", 0, previousWeight);
+        assertNotEquals("Expected graph to be modified", InitialNumVertices, CurrentNumVertices);
+        assertEquals("Expected number of vertices to increase by 1", InitialNumVertices + 1, CurrentNumVertices);
+        assertTrue("Expected source to have target", targets.containsKey(target));
+        assertTrue("Expected target to have source", sources.containsKey(source));
+        assertEquals("Expected source to have correct weight", (Integer)weight, sources.get(source));
+        assertEquals("Expected target to have correct weight", (Integer)weight, targets.get(target));
+    }
+    
+    @Test
+    //covers graph contains multiple vertices,
+    //       source and target exist in graph,
+    //       No edge from source to target,
+    //       weight > 0
+    public void testSetNoEdgeExists(){
+        Graph<String> graph = emptyInstance();
+        
+        final String source = "vertex1";
+        final String target = "vertex2";
+        final int weight = 1;
+        
+        graph.add(source);
+        graph.add(target);
+        final int InitialNumVertices = graph.vertices().size();
+        final int previousWeight = graph.set(source, target, weight);
+        final int CurrentNumVertices = graph.vertices().size();
+        Map<String, Integer> targets = graph.targets(source);
+        Map<String, Integer> sources = graph.sources(target);
+        
+        assertEquals("Expected no previous weight", 0, previousWeight);
+        assertEquals("Expected graph not to be modified", InitialNumVertices, CurrentNumVertices);
+        assertTrue("Expected source to have target", targets.containsKey(target));
+        assertTrue("Expected target to have source", sources.containsKey(source));
+        assertEquals("Expected source to have correct weight", (Integer)weight, sources.get(source));
+        assertEquals("Expected target to have correct weight", (Integer)weight, targets.get(target));
+    }
+    
+    @Test
+    //covers graph contains multiple vertices,
+    //       source and target exist in graph,
+    //       an edge exists from source to target
+    //       weight > 0
+    public void testSetUpdateWeight(){
+        Graph<String> graph = emptyInstance();
+        
+        //create an edge to test set() on
+        final String source = "vertex1";
+        final String target = "vertex2";
+        final int initialWeight = 1;
+        graph.add(source);
+        graph.add(target);
+        graph.set(source, target, initialWeight);
+        
+        final int newWeight = 2;
+        final int InitialNumVertices = graph.vertices().size();
+        final int previousWeight = graph.set(source, target, newWeight);
+        final int CurrentNumVertices = graph.vertices().size();
+        Map<String, Integer> targets = graph.targets(source);
+        Map<String, Integer> sources = graph.sources(target);
+        
+        assertEquals("Expected previous weight to be initial weight", initialWeight, previousWeight);
+        assertEquals("Expected edge to change weight", (Integer)newWeight, targets.get(target));
+        assertEquals("Expected edge to change weight", (Integer)newWeight, sources.get(source));
+        assertEquals("Expected same number of vertices", InitialNumVertices, CurrentNumVertices);
+        
+    }
+    
+    @Test
+    //covers graph contains multiple vertices,
+    //       source and target exist in graph,
+    //       an edge exists from source to target
+    //       weight = 0
+    public void testSetRemoveEdge(){
+        Graph<String> graph = emptyInstance();
+        
+        //create an edge to test set() on
+        final String source = "vertex1";
+        final String target = "vertex2";
+        final int initialWeight = 1;
+        graph.add(source);
+        graph.add(target);
+        graph.set(source, target, initialWeight);
+        
+        final int newWeight = 0;
+        final int InitialNumVertices = graph.vertices().size();
+        final int previousWeight = graph.set(source, target, newWeight);
+        final int CurrentNumVertices = graph.vertices().size();
+        Map<String, Integer> targets = graph.targets(source);
+        Map<String, Integer> sources = graph.sources(target);
+        
+        assertEquals("Expected previous weight to be initial weight", initialWeight, previousWeight);
+        assertEquals("Expected same number of vertices", InitialNumVertices, CurrentNumVertices);
+        assertFalse("Expected edge removed from graph", sources.containsKey(source));
+        assertFalse("Expected edge removed from graph", targets.containsKey(target));
+        
+    }
+    
+    @Test
+    //covers graph contains multiple vertices,
+    //       source and target exist in graph,
+    //       No edge exists from source to target
+    //       weight = 0
+    public void testSetEdgeNotExistRemoveEdge(){
+        Graph<String> graph = emptyInstance();
+
+        final String source = "vertex1";
+        final String target = "vertex2";
+        final int weight = 0;
+        
+        graph.add(source);
+        graph.add(target);
+        final int InitialNumVertices = graph.vertices().size();
+        final int previousWeight = graph.set(source, target, weight);
+        final int CurrentNumVertices = graph.vertices().size();
+        Map<String, Integer> targets = graph.targets(source);
+        Map<String, Integer> sources = graph.sources(target);
+        
+        assertEquals("Expected previous weight to be initial weight", weight, previousWeight);
+        assertEquals("Expected same number of vertices", InitialNumVertices, CurrentNumVertices);
+        assertEquals("Expected no new edge in graph", Collections.emptyMap(), targets);
+        assertEquals("Expected no new edge in graph", Collections.emptyMap(), sources);
+    }
+    
+    @Test
+    //covers enpty graph
+    public void testVerticesEmptyGraph() {
+        Graph<String> graph = emptyInstance();
+        assertEquals("Expected new graph to have no vertices", Collections.emptySet(), graph.vertices());
+    }
+    
+    @Test
+    //covers graph contains multiple vertices
+    public void testVertices() {
+        Graph<String> graph = emptyInstance();
+        
+        graph.add("vertex1");
+        graph.add("vertex2");
+        graph.add("vertex3");
+        
+        Set<String> vertices = graph.vertices();
+        
+        assertNotEquals("Expected non-empty set", Collections.emptySet(), vertices);
+        assertEquals("Expected 3 vertices", 3, vertices.size());
+    }
+    
+    @Test
+    //covers empty graph
+    public void testSourcesEmptyGraph(){
+        Graph<String> graph = emptyInstance();
+        final String target = "vertex1";
+        Map<String, Integer> sources = graph.sources(target);
+        
+        assertEquals("Expected new graph to have no sources", Collections.emptyMap(), sources);
+    }
+    
+    @Test
+    //covers graph contains multiple vertices
+    //       target doesn't exist in graph
+    public void testSourcesNoTarget(){
+        Graph<String> graph = emptyInstance();
+        
+        graph.add("vertex1");
+        graph.add("vertex2");
+        final String target = "vertex3";
+        Map<String, Integer> sources = graph.sources(target);
+        
+        assertEquals("Expected graph to have no sources", Collections.emptyMap(), sources);
+        
+    }
+    
+    @Test
+    //covers graph contains multiple vertices
+    //       target exists in graph
+    //       target has no sources
+    public void testSourcesNoSourcesToTarget(){
+        Graph<String> graph = emptyInstance();
+        final String target = "vertex1";
+        graph.add(target);
+        graph.add("vertex2");
+        Map<String, Integer> sources = graph.sources(target);
+        
+        assertEquals("Expected graph to have no sources", Collections.emptyMap(), sources);
+    }
+    
+    @Test
+    //covers graph contains multiple vertices,
+    //       target exists in graph,
+    //       target has multiple sources
+    public void testSourcesMultipleSources(){
+        Graph<String> graph = emptyInstance();
+        
+        //create edges to test sources
+        final String target = "vertex";
+        final String vertex1 = "vertex1";
+        final String vertex2 = "vertex2";
+        final String vertex3 = "vertex3";
+        final int weight = 1;
+        
+        graph.set(vertex1, target, weight);
+        graph.set(vertex2, target, weight);
+        graph.add(vertex3);
+        
+        Map<String, Integer> sources = graph.sources(target);
+        
+        assertNotEquals("Expected graph to have sources", Collections.emptyMap(), sources);
+        assertEquals("Expected 2 sources to target", 2, sources.keySet().size());
+        assertTrue("Expected sources to contain vertex1, vertex2", 
+                Arrays.asList(vertex1, vertex2).containsAll(sources.keySet()));
+        }
+    
+    @Test
+    //covers empty graph
+    public void testTargetsEmptyGraph(){
+        Graph<String> graph = emptyInstance();
+        Map<String, Integer> targets = graph.targets("vertex");
+        
+        assertEquals("Expected empty graph to have no targets", Collections.emptyMap(), targets);   
+    }
+    
+    @Test
+    //covers graph has multiple vertices
+    //       source not in graph
+    public void testTargetsNoTarget(){
+        Graph<String> graph = emptyInstance();
+        
+        graph.add("vertex1");
+        graph.add("vertex2");
+        
+        final String source = "vertex3";
+        
+        Map<String, Integer> targets = graph.targets(source);
+        
+        assertEquals("Expected graph to have no targets", Collections.emptyMap(), targets);
+    }
+    
+    @Test
+    //covers graph contains multiple vertices,
+    //       source in graph,
+    //       source has no targets
+    public void testTargetsNoTargetsFromSource(){
+        Graph<String> graph = emptyInstance();
+        final String source = "vertex1";
+        
+        graph.add(source);
+        graph.add("vertex2");
+        
+        Map<String, Integer> targets = graph.targets(source);
+        
+        assertEquals("Expected graph to have no targets", Collections.emptyMap(), targets);
+    }
+    
+    @Test
+    //covers graph contains multiple vertices,
+    //       source in graph,
+    //       source has multiple targets
+    public void testTargetsMultipleTargets(){
+        Graph<String> graph = emptyInstance();
+        final String source = "vertex";
+        final String vertex1 = "vertex1";
+        final String vertex2 = "vertex2";
+        final String vertex3 = "vertex3";
+        final int weight = 1;
+        
+        graph.set(source, vertex1, weight);
+        graph.set(source, vertex2, weight);
+        graph.add(vertex3);
+        
+        Map<String, Integer> targets = graph.targets(source);
+        
+        assertNotEquals("Expected graph to have targets", Collections.emptyMap(), targets);
+        assertEquals("Expected 2 targets from source", 2, targets.keySet().size());
+        assertTrue("Expected targets to containe vertex1, vertex2", 
+                Arrays.asList(vertex1,vertex2).containsAll(targets.keySet()));
+    }
 }

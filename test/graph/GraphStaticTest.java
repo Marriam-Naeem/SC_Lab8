@@ -1,3 +1,8 @@
+/* Copyright (c) 2015-2016 MIT 6.005 course staff, all rights reserved.
+ * Redistribution of original or derived work requires permission of course staff.
+ */
+package graph;
+
 import static org.junit.Assert.*;
 
 import java.util.Collections;
@@ -9,60 +14,53 @@ import org.junit.Test;
  * 
  * To facilitate testing multiple implementations of Graph, instance methods are
  * tested in GraphInstanceTest.
- * 
- * <p>PS2 instructions: You MUST NOT add constructors, fields, or non-@Test
- * methods to this class or change the spec of Graph.empty(). Your tests MUST
- * only refer to the Graph interface. You MUST NOT refer to specific concrete
- * implementations.
- * 
- * <p>The testing strategy for the static Graph.empty() method is outlined in
- * the comments above the corresponding test case. The test cases aim to verify
- * the correctness of the empty() method and its behavior.
- * 
- * @laiba_abdullah
  */
 public class GraphStaticTest {
-
-    /**
-     * Ensures that assertions are enabled in the testing environment.
-     * 
-     * @throws AssertionError if assertions are not enabled
-     */
-    @Test(expected = AssertionError.class)
+    
+    // Testing strategy
+    //   empty()
+    //     no inputs, only output is empty graph
+    //     observe with vertices()
+    
+    @Test(expected=AssertionError.class)
     public void testAssertionsEnabled() {
         assert false; // make sure assertions are enabled with VM argument: -ea
     }
-
-    /**
-     * Tests that the vertices() method of the graph returned by Graph.empty() is
-     * empty.
-     * 
-     * <p>Testing Strategy:
-     * - Call Graph.empty() to obtain an empty graph.
-     * - Check if the vertices() method returns an empty set.
-     */
+    
     @Test
     public void testEmptyVerticesEmpty() {
         assertEquals("expected empty() graph to have no vertices",
                 Collections.emptySet(), Graph.empty().vertices());
     }
-
-    /**
-     * Tests that the empty() method returns a new instance of the Graph interface.
-     * 
-     * <p>Testing Strategy:
-     * - Call Graph.empty() multiple times.
-     * - Check if the returned instances are not the same object reference.
-     */
+    
+    // TODO test other vertex label types in Problem 3.2
+    //using integers
     @Test
-    public void testEmptyReturnsNewInstance() {
-        Graph<String> graph1 = Graph.empty();
-        Graph<String> graph2 = Graph.empty();
-
-        assertNotSame("expected empty() to return new instances", graph1, graph2);
+    public void testIntegerAsLabel(){
+        Graph<Integer> graph = Graph.empty();
+        final int vertex1 = 1;
+        final int vertex2 = 2;
+        final int vertex3 = 3;
+        
+        final boolean addedVertex1 = graph.add(vertex1);
+        final boolean addedVertex2 = graph.add(vertex2);
+        
+        final int weight1 = 2;
+        final int weight2 = 1;
+        
+        final int prevWeight1 = graph.set(vertex1, vertex2, weight1);
+        final int prevWeight2 = graph.set(vertex3, vertex1, weight2);   
+        final int initialNumVertices = graph.vertices().size();
+        final boolean removedVertex2 = graph.remove(vertex2);
+        
+        assertTrue("Expected vertex1 added", addedVertex1);
+        assertTrue("Expected vertex2 added", addedVertex2);
+        assertEquals("Expected no previous weight", 0, prevWeight1);
+        assertEquals("Expected no previous weight", 0, prevWeight2);
+        assertEquals("Expected correct num vertices", 3, initialNumVertices);
+        assertTrue("Expected vertex2 removed", removedVertex2);
+        assertEquals("Expected one vertex removed", initialNumVertices - 1, graph.vertices().size());
+        System.out.println(graph);
+  
     }
-
-    // Additional test cases for other vertex label types in Problem 3.2:
-    // - Add tests for vertex label types other than String, if applicable.
-
 }
