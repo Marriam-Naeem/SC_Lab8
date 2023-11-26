@@ -1,94 +1,93 @@
+/* Copyright (c) 2015-2016 MIT 6.005 course staff, all rights reserved.
+* Redistribution of original or derived work requires permission of course staff.
+*/
 package poet;
-
-import graph.Graph;
-
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Scanner;
 import java.util.Set;
-
-/**
- * A graph-based poetry generator.
- */
+import java.util.stream.Collectors;
+import graph.Graph;
 public class GraphPoet {
-
-    private final Graph<String> graph = Graph.empty();
-
-    /**
-     * Create a new poet with the graph from corpus (as described above).
-     *
-     * @param corpus text file from which to derive the poet's affinity graph
-     * @throws IOException if the corpus file cannot be found or read
-     */
-    public GraphPoet(File corpus) throws IOException {
-        List<String> lines = Files.readAllLines(corpus.toPath());
-
-        // Process lines to build the word affinity graph
-        for (String line : lines) {
-            String[] words = line.split("\\s+");
-            for (int i = 0; i < words.length - 1; i++) {
-                String currentWord = words[i].toLowerCase();
-                String nextWord = words[i + 1].toLowerCase();
-                graph.add(currentWord);
-                graph.add(nextWord);
-                int weight = graph.set(currentWord, nextWord, graph.targets(currentWord).getOrDefault(nextWord, 0) + 1);
-                if (weight == 0) {
-                    // Increment the weight of the existing edge
-                    graph.set(currentWord, nextWord, weight + 1);
-                }
-            }
-        }
-    }
-
-    /**
-     * Generate a poem.
-     *
-     * @param input string from which to create the poem
-     * @return poem (as described above)
-     */
-    public String poem(String input) {
-        String[] inputWords = input.split("\\s+");
-        StringBuilder result = new StringBuilder();
-
-        for (int i = 0; i < inputWords.length - 1; i++) {
-            String currentWord = inputWords[i].toLowerCase();
-            String nextWord = inputWords[i + 1].toLowerCase();
-            result.append(currentWord).append(" ");
-            String bridgeWord = findBridgeWord(currentWord, nextWord);
-            result.append(bridgeWord).append(" ");
-        }
-        result.append(inputWords[inputWords.length - 1]);
-
-        return result.toString();
-    }
-
-    private String findBridgeWord(String currentWord, String nextWord) {
-        Map<String, Integer> targets = graph.targets(currentWord);
-        Set<String> commonTargets = targets.keySet();
-        commonTargets.retainAll(graph.sources(nextWord).keySet());
-
-        if (!commonTargets.isEmpty()) {
-            int maxWeight = 0;
-            String bridgeWord = "";
-            for (String commonTarget : commonTargets) {
-                int weight = targets.get(commonTarget);
-                if (weight > maxWeight) {
-                    maxWeight = weight;
-                    bridgeWord = commonTarget;
-                }
-            }
-            return bridgeWord;
-        } else {
-            return "";
-        }
-    }
-
-    @Override
-    public String toString() {
-        return graph.toString();
-        
-        
-    }
+   private final Graph<String> wordGraph;
+   private final List<String> wordList;
+  
+   public GraphPoet(File textFile) throws IOException {
+       wordList = extractWordsFromFile(textFile);
+       wordGraph = buildWordGraph(wordList);
+       checkRepresentation();
+   }
+  
+   private void checkRepresentation() {
+       assert wordGraph != null;
+   }
+   private List<String> extractWordsFromFile(File file) throws IOException {
+       List<String> words = new ArrayList<>();
+       try (Scanner scanner = new Scanner(new BufferedReader(new FileReader(file)))) {
+           while (scanner.hasNext()) {
+               words.add(scanner.next().toLowerCase());
+           }
+       }
+       assert words != Collections.EMPTY_LIST;
+       return words;
+   }
+   private Graph<String> buildWordGraph(List<String> words){
+       Graph<String> graph = Graph.empty();
+      
+       for (int i = 0; i < words.size(); i++) {
+           String source = words.get(i);
+           graph.add(source);
+           if ((i + 1) >= words.size()) {
+               break;
+           }
+           String target = words.get(i + 1);
+           int prevCount = graph.set(source, target, 1);
+           graph.set(source, target, prevCount + 1);
+       }
+       return graph;
+   }
+   public List<String> getWordsFromCorpus() {
+       return Collections.unmodifiableList(wordList);
+   }
+   public String createPoem(String input) {
+       String[] inputWords = input.split("\\s");
+       StringBuilder poem = new StringBuilder(input);
+       int fromIndex = 0;
+      
+       for (int i = 0; i < inputWords.length; i++) {
+           if (i + 1 >= inputWords.length) {
+               break;
+           }
+           Map<String, Integer> word1Targets = wordGraph.targets(inputWords[i].toLowerCase());
+           Map<String, Integer> word2Sources = wordGraph.sources(inputWords[i+1].toLowerCase());
+           Set<String> probableBridges = word1Targets.keySet();
+          
+           List<String> allBridges = probableBridges.stream()
+                   .filter(possibleBridge -> word2Sources.containsKey(possibleBridge))
+                   .collect(Collectors.toList());
+          
+           if (!allBridges.isEmpty()) {
+               Random rand = new Random();
+               int  n = rand.nextInt(allBridges.size());
+               String bridge = allBridges.get(n);
+               int insertAt = poem.indexOf(inputWords[i+1], fromIndex);
+               poem.insert(insertAt, bridge + " ");
+           }
+       }
+       checkRepresentation();
+       return poem.toString();
+   }
+  
+   @Override
+   public String toString() {
+       return wordGraph.toString();
+   }
 }
+
